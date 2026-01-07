@@ -1,0 +1,77 @@
+/* Remove default padding and styling for our custom layout */
+#root {
+  padding: 0;
+}
+
+/* Smooth transitions for dark mode */
+* {
+  transition-property: background-color, border-color, color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Professional animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.slide-in-from-bottom-4 {
+  animation: slide-in-from-bottom 0.5s ease-out;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
+}
+
