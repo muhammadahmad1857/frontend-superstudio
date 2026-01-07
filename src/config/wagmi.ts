@@ -6,4 +6,5 @@ export const config = getDefaultConfig({
   projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "nft-studio",
   chains: [mainnet],
   ssr: false,
+  
 });
