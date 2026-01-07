@@ -9,6 +9,7 @@ import App from "./App";
 
 import "@rainbow-me/rainbowkit/styles.css";
 import "./index.css";
+import { Toaster } from "./components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -17,7 +18,9 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
         <RainbowKitProvider>
+          <Toaster richColors closeButton/>
           <App />
+          
         </RainbowKitProvider>
       </WagmiProvider>
     </QueryClientProvider>

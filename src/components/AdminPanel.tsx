@@ -15,9 +15,9 @@ import {
   CardContent,
 } from "./ui/card";
 import { Label } from "./ui/label";
-import { NFT_ABI } from "../config/abi";
 import { Shield, Loader2, Link, AlertCircle, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
+import {NFT_ABI}  from "../config/abi.config.ts";
 
 interface AdminPanelProps {
   contractAddress: `0x${string}`;

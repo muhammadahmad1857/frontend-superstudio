@@ -15,7 +15,7 @@ import {
   CardContent,
 } from "./ui/card";
 import { Label } from "./ui/label";
-import { NFT_ABI } from "../config/abi";
+import { NFT_ABI } from "../config/abi.config";
 import { Image, Loader2, Layers, Hash } from "lucide-react";
 import { motion } from "framer-motion";
 
