@@ -1,10 +1,8 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useRef } from "react";
 import {
   useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
-  useSimulateContract,
 } from "wagmi";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -20,6 +18,7 @@ import { Label } from "./ui/label";
 import { NFT_ABI } from "../config/abi.config";
 import { Image, Loader2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import type { BaseError } from 'wagmi';
 
 interface MintFormProps {
   contractAddress: `0x${string}`;
@@ -30,33 +29,27 @@ export function MintForm({ contractAddress }: MintFormProps) {
   const [tokenURI, setTokenURI] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Toast ID for safe updates
   const toastIdRef = useRef<string | number | null>(null);
 
-  /* ---------------- SIMULATION ---------------- */
-  const { error: simError } = useSimulateContract({
-    address: contractAddress,
-    abi: NFT_ABI,
-    functionName: "mint",
-    args: tokenURI ? [tokenURI] : undefined,
-  });
-
-  /* ---------------- WRITE ---------------- */
+  // ---------------- CONTRACT WRITE ----------------
   const {
-    mutate: writeContract,
-    
-    data: hash,
+    writeContract,
+    data: txData,
     error: writeError,
+    isPending: isPreparing,
   } = useWriteContract();
 
-  /* ---------------- TX RECEIPT ---------------- */
+  // ---------------- TX RECEIPT ----------------
   const {
     isLoading: isConfirming,
     isSuccess,
     isError: txError,
-  } = useWaitForTransactionReceipt({ hash });
+    error: txReceiptError,
+  } = useWaitForTransactionReceipt({
+    hash: txData,
+  });
 
-  /* ---------------- HANDLERS ---------------- */
+  // ---------------- HANDLER ----------------
   const handleMint = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -70,16 +63,6 @@ export function MintForm({ contractAddress }: MintFormProps) {
       return;
     }
 
-    if (simError) {
-      console.log("Simulation error:", simError);
-      toast.error(
-        simError.message.includes("insufficient funds")
-          ? "You don’t have enough ETH for gas ⛽"
-          : simError.message
-      );
-      return;
-    }
-
     setIsSubmitting(true);
     console.log("Minting with tokenURI:", tokenURI);
     writeContract({
@@ -90,57 +73,50 @@ export function MintForm({ contractAddress }: MintFormProps) {
     });
   };
 
-  /* ---------------- EFFECTS ---------------- */
-
-  // Wallet rejected / write failed
+  // ---------------- EFFECTS ----------------
   useEffect(() => {
-    if (!writeError) return;
-    console.log("Write error:", writeError);
-    toast.error(writeError.message);
-    setIsSubmitting(false);
+    if (writeError) {
+      console.log("Write error:", writeError);
+      const errorMessage = (writeError as BaseError).shortMessage || writeError.message;
+      toast.error(
+        errorMessage.includes("insufficient funds")
+          ? "You don’t have enough ETH for gas ⛽"
+          : errorMessage
+      );
+      setIsSubmitting(false);
+    }
   }, [writeError]);
 
-  // Tx mining
   useEffect(() => {
-    if (!isConfirming) return;
-    console.log("Transaction is being mined...");
-
-    if (!toastIdRef.current) {
+    if (isConfirming && !toastIdRef.current) {
       toastIdRef.current = toast.loading("Transaction is being mined...");
     }
   }, [isConfirming]);
 
-  // Tx success
   useEffect(() => {
-    if (!isSuccess) return;
-    console.log("Minting successfully")
-    if (toastIdRef.current) {
+    if (isSuccess && toastIdRef.current) {
       toast.success("NFT minted successfully 🎉", {
         id: toastIdRef.current,
       });
       toastIdRef.current = null;
+      setTokenURI("");
+      setIsSubmitting(false);
     }
-
-    setTokenURI("");
-    setIsSubmitting(false);
   }, [isSuccess]);
 
-  // Tx reverted / failed
   useEffect(() => {
-    if (!txError) return;
-    console.log("txerror",txError)
-    if (toastIdRef.current) {
-      toast.error("Transaction failed or reverted", {
+    if (txError && toastIdRef.current) {
+      const errorMessage = (txReceiptError as BaseError)?.shortMessage || txReceiptError?.message || "Transaction failed or reverted";
+      toast.error(errorMessage, {
         id: toastIdRef.current,
       });
       toastIdRef.current = null;
+      setIsSubmitting(false);
     }
+  }, [txError, txReceiptError]);
 
-    setIsSubmitting(false);
-  }, [txError]);
-
-  /* ---------------- UI ---------------- */
-  const isBusy = isSubmitting || isConfirming;
+  // ---------------- UI ----------------
+  const isBusy = isSubmitting || isPreparing || isConfirming;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
