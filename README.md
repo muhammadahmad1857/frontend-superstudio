@@ -140,10 +140,6 @@ The frontend expects a contract with these functions:
 function mint(string memory tokenURI) public returns (bool)
 function batchMint(string memory tokenURI, uint256 numOfTokens) public returns (bool)
 function baseURI(string memory baseUri) public onlyOwner
-function baseURI() public view returns (string memory)
-function balanceOf(address owner) external view returns (uint256)
-function totalSupply() public view returns (uint256)
-function owner() public view returns (address)
 ```
 
 See [smart-contract.sol](smart-contract.sol) for the full ERC721 implementation.
