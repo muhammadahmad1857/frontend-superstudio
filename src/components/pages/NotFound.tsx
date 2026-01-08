@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Bug as BugIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
   // Bug component with random starting positions and crawling movement
   const Bug = ({ top, left, delay }:{
     top: number;
@@ -86,9 +87,9 @@ const NotFound = () => {
         </p>
 
         {/* Home Button */}
-        <button className="bg-[#eab308] hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 text-black font-bold py-4 px-12 rounded-2xl uppercase text-sm tracking-widest shadow-lg">
+        <Link to="/" className="bg-[#eab308] hover:bg-yellow-300 transition-all hover:scale-105 active:scale-95 text-black font-bold py-4 cursor-pointer px-12 rounded-2xl uppercase text-sm tracking-widest shadow-lg">
           Home Page
-        </button>
+        </Link>
 
         {/* Footer */}
         <div className="w-full mt-24 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-white/5 pt-8">
