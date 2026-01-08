@@ -54,7 +54,7 @@ export function Header() {
                 <Moon className="h-5 w-5" />
               )}
             </Button>
-            <ConnectButton />
+            <ConnectButton  />
           </motion.div>
         </div>
       </div>
