@@ -45,7 +45,7 @@ const NotFound = () => {
         
         {/* Header Logo */}
         <div className="flex items-center gap-2 mb-16">
-          <div className="bg-[#eab308] rounded-full w-8 h-8 flex items-center justify-center text-black font-bold text-xs">WN</div>
+          <div className="bg-[#eab308] rounded-full w-8 h-8 flex items-center justify-center text-black font-bold text-xs">AN</div>
           <span className="dark:text-white text-black font-semibold tracking-wide">ApolloNFT</span>
         </div>
 
