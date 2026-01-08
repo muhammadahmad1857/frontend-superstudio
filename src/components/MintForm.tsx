@@ -47,14 +47,16 @@ export function MintForm({ contractAddress }: MintFormProps) {
     setIsLoading(true);
 
     try {
-      writeContract({
+      console.log("Miniting started with tokenURI:", tokenURI);
+     const data = writeContract({
         address: contractAddress,
         abi: NFT_ABI,
         functionName: "mint",
         args: [tokenURI],
       });
+      console.log("Minting data:", data);
 
-      toast.loading("Minting your NFT...");
+      // toast.loading("Minting your NFT...");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Minting failed");
       setIsLoading(false);
@@ -140,7 +142,6 @@ export function MintForm({ contractAddress }: MintFormProps) {
                 className="w-full bg-purple-600 text-white shadow-md transition-all hover:bg-purple-700 hover:shadow-lg disabled:opacity-50"
                 size="lg"
               >
-                {!isConnected && "Wallet is not connected"}
               { isConnected ? <>
               { (isTxLoading || isLoading) ? (
                   <>
