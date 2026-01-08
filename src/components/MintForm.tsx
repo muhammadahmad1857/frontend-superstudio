@@ -43,7 +43,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
 
   /* ---------------- WRITE ---------------- */
   const {
-    writeContract,
+    mutate: writeContract,
     
     data: hash,
     error: writeError,
