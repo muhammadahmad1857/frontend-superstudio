@@ -3,7 +3,6 @@ import { Header } from "./components/Header";
 import { MintForm } from "./components/MintForm";
 import { BatchMintForm } from "./components/BatchMintForm";
 import { AdminPanel } from "./components/AdminPanel";
-import { Toaster } from "sonner";
 import "./App.css";
 import { useTheme } from "./hooks/useTheme";
 import { Copy, CheckCircle2, Wallet } from "lucide-react";
@@ -224,7 +223,6 @@ function App() {
         </div>
       </main>
 
-      <Toaster position="top-center" richColors />
     </div>
   );
 }

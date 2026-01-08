@@ -48,15 +48,14 @@ export function MintForm({ contractAddress }: MintFormProps) {
 
     try {
       console.log("Miniting started with tokenURI:", tokenURI);
-     const data = writeContract({
+      writeContract({
         address: contractAddress,
         abi: NFT_ABI,
         functionName: "mint",
         args: [tokenURI],
       });
-      console.log("Minting data:", data);
 
-      // toast.loading("Minting your NFT...");
+      toast.loading("Minting your NFT...");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Minting failed");
       setIsLoading(false);
