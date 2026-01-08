@@ -3,7 +3,7 @@ import { Header } from "../Header";
 import { MintForm } from "../MintForm";
 import { BatchMintForm } from "../BatchMintForm";
 import { AdminPanel } from "../AdminPanel";
-import "./App.css";
+import "../../App.css";
 import { useTheme } from "../../hooks/useTheme";
 import { Copy, CheckCircle2, Wallet } from "lucide-react";
 import { Button } from "../ui/button";
