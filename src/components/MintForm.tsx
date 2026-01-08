@@ -1,8 +1,10 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useState, useEffect, useRef } from "react";
 import {
   useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
+  useSimulateContract,
 } from "wagmi";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -15,7 +17,7 @@ import {
   CardContent,
 } from "./ui/card";
 import { Label } from "./ui/label";
-import { NFT_ABI } from "../config/abi.config.ts";
+import { NFT_ABI } from "../config/abi.config";
 import { Image, Loader2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -26,60 +28,122 @@ interface MintFormProps {
 export function MintForm({ contractAddress }: MintFormProps) {
   const { isConnected } = useAccount();
   const [tokenURI, setTokenURI] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { writeContract, data: hash } = useWriteContract();
-  const { isLoading: isTxLoading } = useWaitForTransactionReceipt({ hash });
-  console.log("isTXLOADING",isTxLoading,"\n isLoading",isLoading)
-  const handleMint = async (e: React.FormEvent) => {
+  // Toast ID for safe updates
+  const toastIdRef = useRef<string | number | null>(null);
+
+  /* ---------------- SIMULATION ---------------- */
+  const { error: simError } = useSimulateContract({
+    address: contractAddress,
+    abi: NFT_ABI,
+    functionName: "mint",
+    args: tokenURI ? [tokenURI] : undefined,
+  });
+
+  /* ---------------- WRITE ---------------- */
+  const {
+    writeContract,
+    
+    data: hash,
+    error: writeError,
+  } = useWriteContract();
+
+  /* ---------------- TX RECEIPT ---------------- */
+  const {
+    isLoading: isConfirming,
+    isSuccess,
+    isError: txError,
+  } = useWaitForTransactionReceipt({ hash });
+
+  /* ---------------- HANDLERS ---------------- */
+  const handleMint = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!tokenURI.trim()) {
-      toast.error("Please enter a token URI");
+      toast.error("Token URI is required");
       return;
     }
 
     if (!isConnected) {
-      toast.error("Please connect your wallet");
+      toast.error("Connect your wallet first");
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      console.log("Miniting started with tokenURI:", tokenURI);
-      writeContract({
-        address: contractAddress,
-        abi: NFT_ABI,
-        functionName: "mint",
-        args: [tokenURI],
-      });
-
-      toast.loading("Minting your NFT...");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Minting failed");
-      setIsLoading(false);
+    if (simError) {
+      toast.error(
+        simError.message.includes("insufficient funds")
+          ? "You don’t have enough ETH for gas ⛽"
+          : simError.message
+      );
+      return;
     }
+
+    setIsSubmitting(true);
+
+    writeContract({
+      address: contractAddress,
+      abi: NFT_ABI,
+      functionName: "mint",
+      args: [tokenURI],
+    });
   };
 
-  if (isTxLoading) {
-    toast.loading("Processing transaction...");
-  }
+  /* ---------------- EFFECTS ---------------- */
 
-  if (hash && !isTxLoading) {
-    toast.success("NFT minted successfully! 🎉");
+  // Wallet rejected / write failed
+  useEffect(() => {
+    if (!writeError) return;
+
+    toast.error(writeError.message);
+    setIsSubmitting(false);
+  }, [writeError]);
+
+  // Tx mining
+  useEffect(() => {
+    if (!isConfirming) return;
+
+    if (!toastIdRef.current) {
+      toastIdRef.current = toast.loading("Transaction is being mined...");
+    }
+  }, [isConfirming]);
+
+  // Tx success
+  useEffect(() => {
+    if (!isSuccess) return;
+
+    if (toastIdRef.current) {
+      toast.success("NFT minted successfully 🎉", {
+        id: toastIdRef.current,
+      });
+      toastIdRef.current = null;
+    }
+
     setTokenURI("");
-    setIsLoading(false);
-  }
+    setIsSubmitting(false);
+  }, [isSuccess]);
+
+  // Tx reverted / failed
+  useEffect(() => {
+    if (!txError) return;
+
+    if (toastIdRef.current) {
+      toast.error("Transaction failed or reverted", {
+        id: toastIdRef.current,
+      });
+      toastIdRef.current = null;
+    }
+
+    setIsSubmitting(false);
+  }, [txError]);
+
+  /* ---------------- UI ---------------- */
+  const isBusy = isSubmitting || isConfirming;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="overflow-hidden border-gray-200 shadow-lg dark:border-gray-800">
-        <CardHeader className="border-b border-gray-200 bg-purple-50/50 dark:border-gray-800 dark:bg-purple-950/10">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Card className="shadow-lg">
+        <CardHeader className="bg-purple-50/50 dark:bg-purple-950/10 border-b border-gray-200 dark:border-gray-800">
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -99,6 +163,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
             </div>
           </motion.div>
         </CardHeader>
+
         <CardContent className="p-6">
           <form onSubmit={handleMint} className="space-y-6">
             <motion.div
@@ -117,16 +182,15 @@ export function MintForm({ contractAddress }: MintFormProps) {
                 <Image className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   id="tokenURI"
-                  placeholder="https://example.com/metadata/1.json"
+                  placeholder="https://ipfs.io/ipfs/..."
                   value={tokenURI}
                   onChange={(e) => setTokenURI(e.target.value)}
-                  disabled={isLoading || isTxLoading}
-                  className="pl-10 transition-all focus:ring-2 focus:ring-purple-500/20"
+                  disabled={isBusy}
+                  className="pl-10 focus:ring-2 focus:ring-purple-500/20 transition-all"
                 />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Enter an IPFS hash or HTTPS URL pointing to your NFT metadata
-                JSON file
+                Enter an IPFS hash or HTTPS URL pointing to your NFT metadata JSON
               </p>
             </motion.div>
 
@@ -137,25 +201,21 @@ export function MintForm({ contractAddress }: MintFormProps) {
             >
               <Button
                 type="submit"
-                disabled={isLoading || isTxLoading || !isConnected}
+                disabled={!isConnected || isBusy}
                 className="w-full bg-purple-600 text-white shadow-md transition-all hover:bg-purple-700 hover:shadow-lg disabled:opacity-50"
                 size="lg"
               >
-              { isConnected ? <>
-              { (isTxLoading || isLoading) ? (
+                {isBusy ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isTxLoading
-                      ? "Processing Transaction..."
-                      : "Preparing Mint..."}
+                    {isConfirming ? "Confirming..." : "Preparing Mint..."}
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
                     Mint NFT
                   </>
-                )}</>:"Your wallet is not connected"
-              }
+                )}
               </Button>
             </motion.div>
           </form>
