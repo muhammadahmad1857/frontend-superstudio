@@ -34,7 +34,7 @@ export function AdminPanel({
   const isOwner =
     isConnected && address?.toLowerCase() === contractOwner?.toLowerCase();
 
-  const { writeContract, data: hash } = useWriteContract();
+  const { mutate: writeContract, data: hash } = useWriteContract();
   const { isLoading: isTxLoading } = useWaitForTransactionReceipt({ hash });
 
   const handleSetBaseURI = async (e: React.FormEvent) => {

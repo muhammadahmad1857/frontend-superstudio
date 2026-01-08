@@ -65,6 +65,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
 
     setIsSubmitting(true);
     console.log("Minting with tokenURI:", tokenURI);
+    console.log("Minting with ABI:", NFT_ABI);
     writeContract({
       address: contractAddress,
       abi: NFT_ABI,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useAccount,
   useWriteContract,
@@ -18,6 +18,7 @@ import { Label } from "./ui/label";
 import { NFT_ABI } from "../config/abi.config";
 import { Image, Loader2, Layers, Hash } from "lucide-react";
 import { motion } from "framer-motion";
+import type { BaseError } from "viem";
 
 interface BatchMintFormProps {
   contractAddress: `0x${string}`;
@@ -27,12 +28,29 @@ export function BatchMintForm({ contractAddress }: BatchMintFormProps) {
   const { isConnected } = useAccount();
   const [tokenURI, setTokenURI] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const { writeContract, data: hash } = useWriteContract();
-  const { isLoading: isTxLoading } = useWaitForTransactionReceipt({ hash });
+  const toastIdRef = useRef<string | number | null>(null);
 
-  const handleBatchMint = async (e: React.FormEvent) => {
+  // ---------------- CONTRACT WRITE ----------------
+  const {
+    writeContract,
+    data: hash,
+    error: writeError,
+    isPending: isPreparing,
+  } = useWriteContract();
+
+  // ---------------- TX RECEIPT ----------------
+  const {
+    isLoading: isConfirming,
+    isSuccess,
+    isError: txError,
+    error: txReceiptError,
+  } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  // ---------------- HANDLER ----------------
+  const handleBatchMint = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!tokenURI.trim()) {
@@ -56,35 +74,64 @@ export function BatchMintForm({ contractAddress }: BatchMintFormProps) {
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      writeContract({
-        address: contractAddress,
-        abi: NFT_ABI,
-        functionName: "batchMint",
-        args: [tokenURI, BigInt(qty)],
-      });
-
-      toast.loading(`Minting ${qty} NFTs...`);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Batch minting failed"
-      );
-      setIsLoading(false);
-    }
+    writeContract({
+      address: contractAddress,
+      abi: NFT_ABI,
+      functionName: "batchMint",
+      args: [tokenURI, BigInt(qty)],
+    });
   };
 
-  if (isTxLoading) {
-    toast.loading("Processing transaction...");
-  }
+  // ---------------- EFFECTS ----------------
 
-  if (hash && !isTxLoading) {
-    toast.success(`Successfully minted ${quantity} NFTs! 🎉`);
-    setTokenURI("");
-    setQuantity("1");
-    setIsLoading(false);
-  }
+  // Write errors (user reject, insufficient gas, etc.)
+  useEffect(() => {
+    if (writeError) {
+      const errorMessage =
+        (writeError as BaseError).shortMessage || writeError.message;
+      toast.error(
+        errorMessage.includes("insufficient funds")
+          ? "You don’t have enough ETH for gas ⛽"
+          : errorMessage
+      );
+    }
+  }, [writeError]);
+
+  // Start loading toast when transaction is confirming
+  useEffect(() => {
+    if (isConfirming && !toastIdRef.current) {
+      toastIdRef.current = toast.loading(`Minting ${quantity} NFTs...`);
+    }
+  }, [isConfirming, quantity]);
+
+  // Success
+  useEffect(() => {
+    if (isSuccess && toastIdRef.current) {
+      toast.success(`Successfully minted ${quantity} NFTs! 🎉`, {
+        id: toastIdRef.current,
+      });
+      toastIdRef.current = null;
+      setTokenURI("");
+      setQuantity("1");
+    }
+  }, [isSuccess, quantity]);
+
+  // On-chain failure (revert)
+  useEffect(() => {
+    if (txError && toastIdRef.current) {
+      const errorMessage =
+        (txReceiptError as BaseError)?.shortMessage ||
+        txReceiptError?.message ||
+        "Transaction reverted";
+      toast.error(errorMessage, {
+        id: toastIdRef.current,
+      });
+      toastIdRef.current = null;
+    }
+  }, [txError, txReceiptError]);
+
+  // ---------------- UI ----------------
+  const isBusy = isPreparing || isConfirming;
 
   return (
     <motion.div
@@ -134,7 +181,7 @@ export function BatchMintForm({ contractAddress }: BatchMintFormProps) {
                   placeholder="https://example.com/metadata.json"
                   value={tokenURI}
                   onChange={(e) => setTokenURI(e.target.value)}
-                  disabled={isLoading || isTxLoading}
+                  disabled={isBusy}
                   className="pl-10 transition-all focus:ring-2 focus:ring-pink-500/20"
                 />
               </div>
@@ -164,7 +211,7 @@ export function BatchMintForm({ contractAddress }: BatchMintFormProps) {
                   max="100"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  disabled={isLoading || isTxLoading}
+                  disabled={isBusy}
                   className="pl-10 transition-all focus:ring-2 focus:ring-pink-500/20"
                 />
               </div>
@@ -180,21 +227,21 @@ export function BatchMintForm({ contractAddress }: BatchMintFormProps) {
             >
               <Button
                 type="submit"
-                disabled={isLoading || isTxLoading || !isConnected}
+                disabled={!isConnected || isBusy}
                 className="w-full bg-pink-600 text-white shadow-md transition-all hover:bg-pink-700 hover:shadow-lg disabled:opacity-50"
                 size="lg"
               >
-                {isTxLoading || isLoading ? (
+                {isBusy ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isTxLoading
+                    {isConfirming
                       ? "Processing Transaction..."
                       : "Preparing Batch..."}
                   </>
                 ) : (
                   <>
                     <Layers className="mr-2 h-4 w-4" />
-                    Mint {quantity} {quantity === "1" ? "NFT" : "NFTs"}
+                    Mint {quantity} {parseInt(quantity) === 1 ? "NFT" : "NFTs"}
                   </>
                 )}
               </Button>
