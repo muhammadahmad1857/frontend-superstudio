@@ -30,7 +30,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
 
   const { writeContract, data: hash } = useWriteContract();
   const { isLoading: isTxLoading } = useWaitForTransactionReceipt({ hash });
-
+  console.log("isTXLOADING",isTxLoading,"\n isLoading",isLoading)
   const handleMint = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -140,7 +140,9 @@ export function MintForm({ contractAddress }: MintFormProps) {
                 className="w-full bg-purple-600 text-white shadow-md transition-all hover:bg-purple-700 hover:shadow-lg disabled:opacity-50"
                 size="lg"
               >
-                {isTxLoading || isLoading ? (
+                {!isConnected && "Wallet is not connected"}
+              { isConnected ? <>
+              { (isTxLoading || isLoading) ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {isTxLoading
@@ -152,7 +154,8 @@ export function MintForm({ contractAddress }: MintFormProps) {
                     <Sparkles className="mr-2 h-4 w-4" />
                     Mint NFT
                   </>
-                )}
+                )}</>:"Your wallet is not connected"
+              }
               </Button>
             </motion.div>
           </form>
