@@ -71,6 +71,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
     }
 
     if (simError) {
+      console.log("Simulation error:", simError);
       toast.error(
         simError.message.includes("insufficient funds")
           ? "You don’t have enough ETH for gas ⛽"
@@ -80,7 +81,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
     }
 
     setIsSubmitting(true);
-
+    console.log("Minting with tokenURI:", tokenURI);
     writeContract({
       address: contractAddress,
       abi: NFT_ABI,
@@ -94,7 +95,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
   // Wallet rejected / write failed
   useEffect(() => {
     if (!writeError) return;
-
+    console.log("Write error:", writeError);
     toast.error(writeError.message);
     setIsSubmitting(false);
   }, [writeError]);
@@ -102,6 +103,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
   // Tx mining
   useEffect(() => {
     if (!isConfirming) return;
+    console.log("Transaction is being mined...");
 
     if (!toastIdRef.current) {
       toastIdRef.current = toast.loading("Transaction is being mined...");
@@ -111,7 +113,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
   // Tx success
   useEffect(() => {
     if (!isSuccess) return;
-
+    console.log("Minting successfully")
     if (toastIdRef.current) {
       toast.success("NFT minted successfully 🎉", {
         id: toastIdRef.current,
@@ -126,7 +128,7 @@ export function MintForm({ contractAddress }: MintFormProps) {
   // Tx reverted / failed
   useEffect(() => {
     if (!txError) return;
-
+    console.log("txerror",txError)
     if (toastIdRef.current) {
       toast.error("Transaction failed or reverted", {
         id: toastIdRef.current,
