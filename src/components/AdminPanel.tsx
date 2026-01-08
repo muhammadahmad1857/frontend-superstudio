@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useAccount,
   useWriteContract,
@@ -17,7 +17,8 @@ import {
 import { Label } from "./ui/label";
 import { Shield, Loader2, Link, AlertCircle, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
-import {NFT_ABI}  from "../config/abi.config.ts";
+import { NFT_ABI } from "../config/abi.config.ts";
+import type { BaseError } from "viem";
 
 interface AdminPanelProps {
   contractAddress: `0x${string}`;
@@ -30,14 +31,31 @@ export function AdminPanel({
 }: AdminPanelProps) {
   const { address, isConnected } = useAccount();
   const [baseURI, setBaseURI] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
+  const toastIdRef = useRef<string | number | null>(null);
+
   const isOwner =
-    isConnected && address?.toLowerCase() === contractOwner?.toLowerCase();
+    isConnected && address && contractOwner &&
+    address.toLowerCase() === contractOwner.toLowerCase();
 
-  const { mutate: writeContract, data: hash } = useWriteContract();
-  const { isLoading: isTxLoading } = useWaitForTransactionReceipt({ hash });
+  // ---------------- CONTRACT WRITE ----------------
+  const {
+    writeContract,
+    data: hash,
+    error: writeError,
+    isPending: isPreparing,
+  } = useWriteContract();
 
-  const handleSetBaseURI = async (e: React.FormEvent) => {
+  // ---------------- TX RECEIPT ----------------
+  const {
+    isLoading: isConfirming,
+    isSuccess,
+    isError: txError,
+    error: txReceiptError,
+  } = useWaitForTransactionReceipt({ hash });
+
+  // ---------------- HANDLER ----------------
+  const handleSetBaseURI = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!baseURI.trim()) {
@@ -50,35 +68,64 @@ export function AdminPanel({
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      writeContract({
-        address: contractAddress,
-        abi: NFT_ABI,
-        functionName: "baseURI",
-        args: [baseURI],
-      });
-
-      toast.loading("Setting base URI...");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to set base URI"
-      );
-      setIsLoading(false);
-    }
+    writeContract({
+      address: contractAddress,
+      abi: NFT_ABI,
+      functionName: "baseURI", // ← Most common name; change if yours is different (e.g. "baseURI", "_setBaseURI")
+      args: [baseURI],
+    });
   };
 
-  if (isTxLoading) {
-    toast.loading("Processing transaction...");
-  }
+  // ---------------- EFFECTS ----------------
 
-  if (hash && !isTxLoading) {
-    toast.success("Base URI updated successfully! 🔧");
-    setBaseURI("");
-    setIsLoading(false);
-  }
+  // Wallet-level errors (reject, insufficient gas, etc.)
+  useEffect(() => {
+    if (writeError) {
+      const errorMessage =
+        (writeError as BaseError).shortMessage || writeError.message;
+      toast.error(
+        errorMessage.includes("insufficient funds")
+          ? "You don’t have enough ETH for gas ⛽"
+          : errorMessage
+      );
+    }
+  }, [writeError]);
 
+  // Start loading toast when confirming
+  useEffect(() => {
+    if (isConfirming && !toastIdRef.current) {
+      toastIdRef.current = toast.loading("Setting base URI...");
+    }
+  }, [isConfirming]);
+
+  // Success
+  useEffect(() => {
+    if (isSuccess && toastIdRef.current) {
+      toast.success("Base URI updated successfully! 🔧", {
+        id: toastIdRef.current,
+      });
+      toastIdRef.current = null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBaseURI("");
+    }
+  }, [isSuccess]);
+
+  // On-chain revert
+  useEffect(() => {
+    if (txError && toastIdRef.current) {
+      const errorMessage =
+        (txReceiptError as BaseError)?.shortMessage ||
+        txReceiptError?.message ||
+        "Transaction reverted";
+      toast.error(errorMessage, { id: toastIdRef.current });
+      toastIdRef.current = null;
+    }
+  }, [txError, txReceiptError]);
+
+  // ---------------- UI STATES ----------------
+  const isBusy = isPreparing || isConfirming;
+
+  // Not connected
   if (!isConnected) {
     return (
       <motion.div
@@ -105,6 +152,7 @@ export function AdminPanel({
     );
   }
 
+  // Connected but not owner
   if (!isOwner) {
     return (
       <motion.div
@@ -131,6 +179,7 @@ export function AdminPanel({
     );
   }
 
+  // Owner view
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -158,6 +207,7 @@ export function AdminPanel({
             </div>
           </motion.div>
         </CardHeader>
+
         <CardContent className="p-6">
           <form onSubmit={handleSetBaseURI} className="space-y-6">
             <motion.div
@@ -179,7 +229,7 @@ export function AdminPanel({
                   placeholder="https://api.example.com/metadata/"
                   value={baseURI}
                   onChange={(e) => setBaseURI(e.target.value)}
-                  disabled={isLoading || isTxLoading}
+                  disabled={isBusy}
                   className="pl-10 transition-all focus:ring-2 focus:ring-violet-500/20"
                 />
               </div>
@@ -196,14 +246,14 @@ export function AdminPanel({
             >
               <Button
                 type="submit"
-                disabled={isLoading || isTxLoading}
+                disabled={isBusy}
                 className="w-full bg-violet-600 text-white shadow-md transition-all hover:bg-violet-700 hover:shadow-lg disabled:opacity-50"
                 size="lg"
               >
-                {isTxLoading || isLoading ? (
+                {isBusy ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isTxLoading
+                    {isConfirming
                       ? "Processing Transaction..."
                       : "Preparing Update..."}
                   </>
