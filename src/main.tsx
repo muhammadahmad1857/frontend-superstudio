@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
 
 import { config } from "./config/wagmi";
 import App from "./App";
@@ -18,9 +19,10 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
         <RainbowKitProvider>
-          <Toaster richColors closeButton/>
-          <App />
-          
+           <BrowserRouter>
+            <Toaster richColors closeButton/>
+            <App />
+          </BrowserRouter>
         </RainbowKitProvider>
       </WagmiProvider>
     </QueryClientProvider>
