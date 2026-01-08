@@ -21,7 +21,7 @@ import { Bug as BugIcon } from 'lucide-react';
         ease: "easeInOut"
       }}
       style={{ top: `${top}%`, left: `${left}%` }}
-      className="absolute text-emerald-400/80 z-0"
+      className="absolute text-green-400/80 z-0"
     >
       <BugIcon size={24} />
     </motion.div>
@@ -30,7 +30,7 @@ const NotFound = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center p-4 relative overflow-hidden font-sans">
       
       {/* Decorative Bugs scattered across the background */}
       <Bug top={15} left={10} delay={0} />
@@ -40,26 +40,26 @@ const NotFound = () => {
       <Bug top={10} left={60} delay={1.5} />
 
       {/* Main Content Card */}
-      <div className="bg-black w-full max-w-4xl rounded-[50px] p-12 md:p-20 flex flex-col items-center text-center relative z-10 shadow-2xl">
+      <div className=" w-full max-w-4xl rounded-[50px] p-12 md:p-20 flex flex-col items-center text-center relative z-10 shadow-2xl">
         
         {/* Header Logo */}
         <div className="flex items-center gap-2 mb-16">
           <div className="bg-[#eab308] rounded-full w-8 h-8 flex items-center justify-center text-black font-bold text-xs">WN</div>
-          <span className="text-white font-semibold tracking-wide">ApolloNFT</span>
+          <span className="dark:text-white text-black font-semibold tracking-wide">ApolloNFT</span>
         </div>
 
         {/* 404 Display with Jump Zone */}
         <div className="flex items-center justify-center gap-6 mb-10">
-          <h1 className="text-white text-[120px] md:text-[180px] font-bold leading-none select-none">4</h1>
+          <h1 className="dark:text-white text-black text-[120px] md:text-[180px] font-bold leading-none select-none">4</h1>
           
           {/* Jumping Emoji Zone */}
           <div className="flex flex-col items-center justify-between h-30 md:h-45 py-4">
             {/* Top Bar */}
-            <div className="w-12 md:w-16 h-1.5 bg-white rounded-full opacity-80" />
+            <div className="w-12 md:w-16 h-1.5 bg-black dark:bg-white rounded-full opacity-80" />
             
             <motion.div 
               animate={{ 
-                y: [0, -60, 0],
+                y: [0, -50, 0],
                 scaleX: [1, 0.9, 1.1, 1], // Squish effect on landing
                 scaleY: [1, 1.1, 0.8, 1]
               }}
@@ -74,10 +74,10 @@ const NotFound = () => {
             </motion.div>
 
             {/* Bottom Bar */}
-            <div className="w-12 md:w-16 h-1.5 bg-white rounded-full opacity-80" />
+            <div className="w-12 md:w-16 h-1.5 bg-black dark:bg-white  rounded-full opacity-80" />
           </div>
 
-          <h1 className="text-white text-[120px] md:text-[180px] font-bold leading-none select-none">4</h1>
+          <h1 className="dark:text-white text-black text-[120px] md:text-[180px] font-bold leading-none select-none">4</h1>
         </div>
 
         {/* Text Section */}
