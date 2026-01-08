@@ -27,7 +27,7 @@ export function Header() {
             </div>
             <div className="flex flex-col">
               <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                Super Studios NFT
+                ApolloNFT 
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Minting Platform
