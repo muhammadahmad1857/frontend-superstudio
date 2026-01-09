@@ -1,5 +1,4 @@
 import { useTheme } from '@/hooks/useTheme';
-import React from 'react'
 
 const Logo = () => {
    const {isDark}=  useTheme()
