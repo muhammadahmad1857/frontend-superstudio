@@ -26,9 +26,8 @@ export function Header() {
             {/* <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 shadow-md dark:bg-purple-500">
               <Sparkles className="h-5 w-5 text-white" />
             </div> */}
-            <div className="flex w-28 h-28 flex-col">
-             <Logo/>
-             
+            <div className="flex w-50 h-28 flex-col">
+              <Logo />
             </div>
           </motion.div>
 
@@ -51,7 +50,7 @@ export function Header() {
                 <Moon className="h-5 w-5" />
               )}
             </Button>
-            <ConnectButton  />
+            <ConnectButton />
           </motion.div>
         </div>
       </div>
