@@ -19,8 +19,8 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={config}>
         <RainbowKitProvider>
-           <BrowserRouter>
-            <Toaster richColors closeButton/>
+          <BrowserRouter>
+            <Toaster richColors closeButton />
             <App />
           </BrowserRouter>
         </RainbowKitProvider>

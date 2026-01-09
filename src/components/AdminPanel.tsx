@@ -35,7 +35,9 @@ export function AdminPanel({
   const toastIdRef = useRef<string | number | null>(null);
 
   const isOwner =
-    isConnected && address && contractOwner &&
+    isConnected &&
+    address &&
+    contractOwner &&
     address.toLowerCase() === contractOwner.toLowerCase();
 
   // ---------------- CONTRACT WRITE ----------------

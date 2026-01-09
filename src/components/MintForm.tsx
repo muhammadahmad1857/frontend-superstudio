@@ -18,7 +18,7 @@ import { Label } from "./ui/label";
 import { NFT_ABI } from "../config/abi.config";
 import { Image, Loader2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import type { BaseError } from 'wagmi';
+import type { BaseError } from "wagmi";
 
 interface MintFormProps {
   contractAddress: `0x${string}`;
@@ -78,7 +78,8 @@ export function MintForm({ contractAddress }: MintFormProps) {
   useEffect(() => {
     if (writeError) {
       console.log("Write error:", writeError);
-      const errorMessage = (writeError as BaseError).shortMessage || writeError.message;
+      const errorMessage =
+        (writeError as BaseError).shortMessage || writeError.message;
       toast.error(
         errorMessage.includes("insufficient funds")
           ? "You don’t have enough ETH for gas ⛽"
@@ -107,7 +108,10 @@ export function MintForm({ contractAddress }: MintFormProps) {
 
   useEffect(() => {
     if (txError && toastIdRef.current) {
-      const errorMessage = (txReceiptError as BaseError)?.shortMessage || txReceiptError?.message || "Transaction failed or reverted";
+      const errorMessage =
+        (txReceiptError as BaseError)?.shortMessage ||
+        txReceiptError?.message ||
+        "Transaction failed or reverted";
       toast.error(errorMessage, {
         id: toastIdRef.current,
       });
@@ -169,7 +173,8 @@ export function MintForm({ contractAddress }: MintFormProps) {
                 />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Enter an IPFS hash or HTTPS URL pointing to your NFT metadata JSON
+                Enter an IPFS hash or HTTPS URL pointing to your NFT metadata
+                JSON
               </p>
             </motion.div>
 

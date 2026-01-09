@@ -222,7 +222,6 @@ function App() {
           </motion.div>
         </div>
       </main>
-
     </div>
   );
 }
